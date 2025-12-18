@@ -1,0 +1,122 @@
+.chaptersSection {
+  padding: 4rem 0;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.sectionHeader {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.sectionHeader h2 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  color: #2c3e50;
+}
+
+.sectionHeader p {
+  font-size: 1.1rem;
+  color: #555;
+  margin: 0;
+}
+
+.chaptersGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.cardLink {
+  text-decoration: none;
+  transition: transform 0.3s ease;
+}
+
+.cardLink:hover {
+  transform: translateY(-8px);
+}
+
+.card {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border-left: 5px solid #007bff;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100px;
+  height: 100px;
+  background: currentColor;
+  opacity: 0.08;
+  border-radius: 50%;
+  transform: translate(40%, -40%);
+}
+
+.card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.cardEmoji {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  display: inline-block;
+}
+
+.cardContent {
+  flex: 1;
+  position: relative;
+  z-index: 1;
+}
+
+.cardTitle {
+  margin: 0 0 0.75rem 0;
+  font-size: 1.3rem;
+  color: #2c3e50;
+}
+
+.cardDescription {
+  margin: 0;
+  color: #666;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.cardArrow {
+  font-size: 1.5rem;
+  margin-top: 1rem;
+  transition: transform 0.3s ease;
+}
+
+.cardLink:hover .cardArrow {
+  transform: translateX(4px);
+}
+
+@media (max-width: 768px) {
+  .sectionHeader h2 {
+    font-size: 1.8rem;
+  }
+
+  .chaptersGrid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .card {
+    padding: 1.5rem;
+  }
+
+  .cardEmoji {
+    font-size: 2.5rem;
+  }
+}

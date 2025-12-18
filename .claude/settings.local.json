@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx create-docusaurus@latest robotics-book-frontend classic)",
+      "Bash(npm start)",
+      "Bash(npm start -- --port 3001)",
+      "Bash(npm start:*)",
+      "Bash(npm run typecheck:*)"
+    ]
+  }
+}
