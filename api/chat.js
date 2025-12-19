@@ -1,43 +1,7 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
-const fs = require("fs").promises;
-const path = require("path");
 
 // Initialize the Google Gemini AI client
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-
-/**
- * Loads the book's content from the 'docs' directory.
- * In a Vercel environment, files included in the deployment are placed relative
- * to the API function's location. We construct the path to account for this.
- */
-async function loadBookContent() {
-  // Correctly locate the 'docs' directory within the Vercel deployment structure.
-  const docsPath = path.resolve(process.cwd(), "robotics-book-frontend/docs");
-  console.log(`Attempting to load book content from: ${docsPath}`);
-
-  try {
-    const files = await fs.readdir(docsPath);
-    const markdownFiles = files.filter((file) => file.endsWith(".md"));
-
-    if (markdownFiles.length === 0) {
-      console.warn("No markdown files found in the docs directory.");
-      return "";
-    }
-
-    let content = "";
-    for (const file of markdownFiles) {
-      const filePath = path.join(docsPath, file);
-      const fileContent = await fs.readFile(filePath, "utf-8");
-      content += fileContent + "\n\n---\n\n";
-    }
-    console.log(`Successfully loaded ${markdownFiles.length} markdown files.`);
-    return content;
-  } catch (error) {
-    console.error(`[FATAL] Error loading book content from ${docsPath}:`, error);
-    // This is a critical error, so we throw to stop execution.
-    throw new Error("Could not load book content. Check server logs for details.");
-  }
-}
 
 // --- MAIN API HANDLER ---
 
@@ -69,7 +33,14 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: "Bad Request: 'message' is required." });
     }
 
-    const bookContext = await loadBookContent();
+    const bookContext = `The book 'Physical AI & Humanoid Robotics' teaches how to build production-ready autonomous systems. It covers ROS 2, Simulation, and AI. The book has 6 chapters:
+- Chapter 1: Introduction to Physical AI (Fundamentals, History, Applications).
+- Chapter 2: ROS 2 Fundamentals (Nodes, Topics, Services, Actions).
+- Chapter 3: Gazebo Simulation (URDF, Physics, Sensors, Integration).
+- Chapter 4: NVIDIA Isaac Platform (Isaac Sim, Perception, Navigation, Manipulation).
+- Chapter 5: Vision-Language-Action Models (VLA Architecture, Training, Deployment).
+- Chapter 6: Capstone Project (End-to-End System Integration).
+The course teaches designing ROS 2 software, creating simulations, integrating AI models, and building autonomous systems.`;
 
     const systemPrompt = `You are an expert AI teaching assistant for the book 'Physical AI & Humanoid Robotics'.
 You answer strictly from the provided documentation context.
