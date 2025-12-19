@@ -22,15 +22,20 @@ module.exports = async (req, res) => {
 
   // --- Main Logic ---
   try {
+    const { message } = req.body;
+    if (!message) {
+      return res.status(400).json({ error: "Bad Request: 'message' is required." });
+    }
+
+    // DIAGNOSTIC CHECK: If the message is 'test', return a dummy response immediately.
+    if (message.toLowerCase().trim() === 'test') {
+      return res.status(200).json({ reply: 'This is a test reply to confirm the API connection is working.' });
+    }
+
     if (!process.env.GEMINI_API_KEY) {
       console.error("[FATAL] GEMINI_API_KEY environment variable is not set.");
       // Do not expose detailed error to client
       return res.status(500).json({ error: "Internal server configuration error." });
-    }
-
-    const { message } = req.body;
-    if (!message) {
-      return res.status(400).json({ error: "Bad Request: 'message' is required." });
     }
 
     const bookContext = `The book 'Physical AI & Humanoid Robotics' teaches how to build production-ready autonomous systems. It covers ROS 2, Simulation, and AI. The book has 6 chapters:
