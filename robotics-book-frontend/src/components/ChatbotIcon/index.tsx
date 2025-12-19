@@ -1,16 +1,77 @@
-import type {ReactNode} from 'react';
-import {useState} from 'react';
+import React, {useState, useRef, useEffect, type ReactNode} from 'react';
 import styles from './styles.module.css';
+
+// Define the structure of a chat message
+interface Message {
+  text: string;
+  sender: 'user' | 'bot';
+}
 
 export default function ChatbotIcon(): ReactNode {
   const [isOpen, setIsOpen] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([
+    {text: '👋 Hello! How can I help you with the content of "Physical AI & Humanoid Robotics" today?', sender: 'bot'},
+  ]);
+  const [inputValue, setInputValue] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const toggleChat = () => {
-    setIsOpen(!isOpen);
+  // Effect to scroll to the latest message
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({behavior: 'smooth'});
+  }, [messages]);
+
+  const toggleChat = () => setIsOpen(!isOpen);
+  const closeChat = () => setIsOpen(false);
+
+  // Function to handle sending a message
+  const handleSendMessage = async () => {
+    // Prevent sending empty messages
+    if (!inputValue.trim()) return;
+
+    // Add user's message to the chat
+    const userMessage: Message = {text: inputValue, sender: 'user'};
+    setMessages((prev) => [...prev, userMessage]);
+    setInputValue('');
+    setIsLoading(true);
+
+    try {
+      // API call to the backend
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({message: inputValue}),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      // Add bot's response to the chat
+      const botMessage: Message = {text: data.answer, sender: 'bot'};
+      setMessages((prev) => [...prev, botMessage]);
+
+    } catch (error) {
+      console.error("Failed to fetch bot's response:", error);
+      const errorMessage: Message = {
+        text: "Sorry, I'm having trouble connecting. Please try again later.",
+        sender: 'bot',
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const closeChat = () => {
-    setIsOpen(false);
+  // Allow sending with the "Enter" key
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSendMessage();
+    }
   };
 
   return (
@@ -50,17 +111,32 @@ export default function ChatbotIcon(): ReactNode {
             </button>
           </div>
           <div className={styles.chatMessages}>
-            <div className={styles.message}>
-              <p>👋 Hello! How can I help you with robotics today?</p>
-            </div>
+            {messages.map((msg, index) => (
+              <div key={index} className={`${styles.message} ${styles[msg.sender]}`}>
+                <p>{msg.text}</p>
+              </div>
+            ))}
+            {isLoading && (
+              <div className={`${styles.message} ${styles.bot}`}>
+                <p className={styles.loadingDots}>
+                  <span>.</span><span>.</span><span>.</span>
+                </p>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
           </div>
           <div className={styles.chatInput}>
             <input
               type="text"
               placeholder="Ask a question..."
-              disabled
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyPress={handleKeyPress}
+              disabled={isLoading}
             />
-            <button disabled>Send</button>
+            <button onClick={handleSendMessage} disabled={isLoading}>
+              Send
+            </button>
           </div>
         </div>
       )}
