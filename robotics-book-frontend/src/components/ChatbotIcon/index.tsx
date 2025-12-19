@@ -52,7 +52,7 @@ export default function ChatbotIcon(): ReactNode {
       const data = await response.json();
 
       // Add bot's response to the chat
-      const botMessage: Message = {text: data.answer, sender: 'bot'};
+      const botMessage: Message = {text: data.reply, sender: 'bot'};
       setMessages((prev) => [...prev, botMessage]);
 
     } catch (error) {
