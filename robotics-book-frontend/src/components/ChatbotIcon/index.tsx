@@ -35,9 +35,20 @@ export default function ChatbotIcon(): ReactNode {
     setInputValue('');
     setIsLoading(true);
 
+    console.log("[CHAT] Sending message:", inputValue);
+    
+    // Dynamic API URL based on environment
+    // Local: points to the standalone Express server on port 3001
+    // Production: points to the relative Vercel serverless function
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    const apiUrl = isDevelopment ? 'http://localhost:3001/api/chat' : '/api/chat';
+    
+    console.log("[CHAT] Environment:", process.env.NODE_ENV);
+    console.log("[CHAT] Resolved API URL:", apiUrl);
+
     try {
       // API call to the backend
-      const response = await fetch('/api/chat', {
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -45,20 +56,40 @@ export default function ChatbotIcon(): ReactNode {
         body: JSON.stringify({message: inputValue}),
       });
 
-      if (!response.ok) {
-        throw new Error(`API Error: ${response.statusText}`);
+      console.log("[CHAT] Response status:", response.status);
+
+      // Read text first to debug non-JSON responses
+      const rawText = await response.text();
+      console.log("[CHAT] Raw response:", rawText);
+
+      // Check content type to ensure we got JSON back (avoids crashing on 404/500 HTML pages)
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+         throw new Error(`Received non-JSON response: ${response.status} ${response.statusText}`);
       }
 
-      const data = await response.json();
+      const data = JSON.parse(rawText);
+      console.log("[CHAT] Parsed JSON:", data);
+
+      if (!response.ok) {
+        throw new Error(data.error || `API Error: ${response.statusText}`);
+      }
 
       // Add bot's response to the chat
-      const botMessage: Message = {text: data.reply, sender: 'bot'};
+      const botMessage: Message = {text: data.reply || "I didn't get a response.", sender: 'bot'};
       setMessages((prev) => [...prev, botMessage]);
 
     } catch (error) {
-      console.error("Failed to fetch bot's response:", error);
+      console.error("Chatbot API Error:", error);
+      
+      let errorMsg = "AI service is temporarily unavailable. Please try again.";
+      // Detect if it's a network error (server down)
+      if (error instanceof TypeError && error.message.includes("fetch")) {
+        errorMsg = "Cannot connect to AI server. Is the backend running on port 3001?";
+      }
+      
       const errorMessage: Message = {
-        text: "Sorry, I'm having trouble connecting. Please try again later.",
+        text: errorMsg,
         sender: 'bot',
       };
       setMessages((prev) => [...prev, errorMessage]);
