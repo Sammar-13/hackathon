@@ -20,7 +20,7 @@ passlib[bcrypt]==1.7.4
 python-multipart==0.0.6
 
 # AI
-anthropic==0.7.11
+anthropic==0.75.0
 
 # HTTP
 httpx==0.25.1
