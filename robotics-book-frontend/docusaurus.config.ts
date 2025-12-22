@@ -35,6 +35,29 @@ const config: Config = {
     locales: ['en'],
   },
 
+  themes: ['@docusaurus/theme-mermaid'],
+
+  plugins: [
+    // Proxy Plugin for Local Development
+    () => ({
+      name: 'configure-proxy',
+      configureWebpack() {
+        return {
+          devServer: {
+            proxy: [
+              {
+                context: ['/api'],
+                target: 'http://localhost:3001',
+                secure: false,
+                changeOrigin: true,
+              },
+            ],
+          },
+        };
+      },
+    }),
+  ],
+
   presets: [
     [
       'classic',

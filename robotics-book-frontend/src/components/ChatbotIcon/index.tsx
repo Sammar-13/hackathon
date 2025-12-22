@@ -35,64 +35,44 @@ export default function ChatbotIcon(): ReactNode {
     setInputValue('');
     setIsLoading(true);
 
-    console.log("[CHAT] Sending message:", inputValue);
+    // Configuration for API URL - supports Vercel/Vite env vars or localhost default
+    // In production (Vercel), you might hardcode the Railway URL if env vars are tricky
+    const API_BASE = 'http://localhost:8080'; // Default Dev URL
+    // const API_BASE = 'https://your-railway-app-url.up.railway.app'; // Uncomment for Production
     
-    // Dynamic API URL based on environment
-    // Local: points to the standalone Express server on port 3001
-    // Production: points to the relative Vercel serverless function
-    const isDevelopment = process.env.NODE_ENV === 'development';
-    const apiUrl = isDevelopment ? 'http://localhost:3001/api/chat' : '/api/chat';
-    
-    console.log("[CHAT] Environment:", process.env.NODE_ENV);
-    console.log("[CHAT] Resolved API URL:", apiUrl);
+    const targetUrl = `${API_BASE}/api/chat`;
+    const payload = { message: inputValue };
+
+    console.log(`[CHAT] 🚀 Sending to: ${targetUrl}`);
 
     try {
-      // API call to the backend
-      const response = await fetch(apiUrl, {
+      const response = await fetch(targetUrl, {
         method: 'POST',
-        headers: {
+        headers: { 
           'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
-        body: JSON.stringify({message: inputValue}),
+        body: JSON.stringify(payload),
       });
 
-      console.log("[CHAT] Response status:", response.status);
-
-      // Read text first to debug non-JSON responses
-      const rawText = await response.text();
-      console.log("[CHAT] Raw response:", rawText);
-
-      // Check content type to ensure we got JSON back (avoids crashing on 404/500 HTML pages)
-      const contentType = response.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-         throw new Error(`Received non-JSON response: ${response.status} ${response.statusText}`);
-      }
-
-      const data = JSON.parse(rawText);
-      console.log("[CHAT] Parsed JSON:", data);
-
       if (!response.ok) {
-        throw new Error(data.error || `API Error: ${response.statusText}`);
+        const errorText = await response.text();
+        throw new Error(`Server ${response.status}: ${errorText}`);
       }
 
-      // Add bot's response to the chat
-      const botMessage: Message = {text: data.reply || "I didn't get a response.", sender: 'bot'};
+      const data = await response.json();
+      const botMessage: Message = {text: data.reply, sender: 'bot'};
       setMessages((prev) => [...prev, botMessage]);
 
-    } catch (error) {
-      console.error("Chatbot API Error:", error);
+    } catch (error: any) {
+      console.error("[CHAT] Fetch Error:", error);
+      let msg = "Could not connect to the AI.";
       
-      let errorMsg = "AI service is temporarily unavailable. Please try again.";
-      // Detect if it's a network error (server down)
-      if (error instanceof TypeError && error.message.includes("fetch")) {
-        errorMsg = "Cannot connect to AI server. Is the backend running on port 3001?";
+      if (error.message.includes("Failed to fetch")) {
+        msg = "Network Error: Is the backend server running?";
       }
-      
-      const errorMessage: Message = {
-        text: errorMsg,
-        sender: 'bot',
-      };
-      setMessages((prev) => [...prev, errorMessage]);
+
+      setMessages((prev) => [...prev, { text: `Error: ${msg}`, sender: 'bot' }]);
     } finally {
       setIsLoading(false);
     }
