@@ -1,4 +1,5 @@
 import React, {useState, useRef, useEffect, type ReactNode} from 'react';
+import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import styles from './styles.module.css';
 
 // Define the structure of a chat message
@@ -8,6 +9,7 @@ interface Message {
 }
 
 export default function ChatbotIcon(): ReactNode {
+  const {siteConfig} = useDocusaurusContext();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {text: '👋 Hello! How can I help you with the content of "Physical AI & Humanoid Robotics" today?', sender: 'bot'},
@@ -35,11 +37,8 @@ export default function ChatbotIcon(): ReactNode {
     setInputValue('');
     setIsLoading(true);
 
-    // Configuration for API URL - supports Vercel/Vite env vars or localhost default
-    // In production (Vercel), you might hardcode the Railway URL if env vars are tricky
-    const API_BASE = 'http://localhost:8080'; // Default Dev URL
-    // const API_BASE = 'https://your-railway-app-url.up.railway.app'; // Uncomment for Production
-    
+    // Configuration for API URL - supports Docusaurus customFields or localhost default
+    const API_BASE = (siteConfig.customFields?.apiUrl as string) || 'http://localhost:8000';
     const targetUrl = `${API_BASE}/api/chat`;
     const payload = { message: inputValue };
 
@@ -68,7 +67,7 @@ export default function ChatbotIcon(): ReactNode {
       console.error("[CHAT] Fetch Error:", error);
       let msg = "Could not connect to the AI.";
       
-      if (error.message.includes("Failed to fetch")) {
+      if (error.message && typeof error.message === 'string' && error.message.includes("Failed to fetch")) {
         msg = "Network Error: Is the backend server running?";
       }
 

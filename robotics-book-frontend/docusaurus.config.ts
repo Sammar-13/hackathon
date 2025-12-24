@@ -58,6 +58,10 @@ const config: Config = {
     }),
   ],
 
+  customFields: {
+    apiUrl: process.env.FRONTEND_API_URL || 'http://localhost:8000',
+  },
+
   presets: [
     [
       'classic',
