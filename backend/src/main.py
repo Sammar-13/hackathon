@@ -17,14 +17,20 @@ from .api.chat_routes import router as chat_router
 # Lifespan context manager for startup/shutdown
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application startup and shutdown."""
-    # Startup
-    print("Starting robotics book platform backend...")
-    init_db()
-    print("Database initialized")
+    """Application startup: safely initialize the database."""
+    print("Starting backend server...")
+    try:
+        init_db()
+    except Exception as e:
+        # If init_db fails after all retries, log the critical error.
+        # The server will continue running but database operations will fail.
+        # This allows the service to be inspected instead of crash-looping.
+        print(f"CRITICAL: Database initialization failed. Server is running without DB connection. Error: {e}")
+    
     yield
+    
     # Shutdown
-    print("Shutting down robotics book platform backend...")
+    print("Shutting down backend server...")
 
 
 # Initialize FastAPI app
